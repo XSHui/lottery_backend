@@ -15,3 +15,13 @@ func InsertArticle(article *model.Article) error {
 	_, err := db.Insert(article)
 	return err
 }
+
+// ListUserArticle: list all article
+// Todo: join user
+func ListUserArticle(offset, limit int)([]model.Article, error) {
+	db := GetDB()
+	data := make([]model.Article, 0)
+	err := db.Limit(limit, offset).Find(&data)
+	return data, err
+}
+

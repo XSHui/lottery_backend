@@ -2,19 +2,15 @@ package api
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"reflect"
+
+	"github.com/gin-gonic/gin"
 )
 
 const BASE_ERR_CODE_INDEX = 70000
 
-// TODO 错误码申请后 注意改下
 const (
-	SIMPLE_TIME_FORMAT        string = "2006-01-02T15:04:05.999999999-07:00"
-	SUCCESS_ON_ACTION_MESSAGE string = "Success"
-	OPERATION_SUFFIX          string = "Response"
-
 	SUCCESS_ON_ACTION_RETCODE int = 0
 
 	ERR_HTTP_URI       int = BASE_ERR_CODE_INDEX
@@ -22,13 +18,7 @@ const (
 	ERR_ACTION_INVALID int = BASE_ERR_CODE_INDEX + 2
 
 	ERR_PARSE_PARAMS_ERROR int = BASE_ERR_CODE_INDEX + 3
-	ERR_MISSING_PARAMS     int = BASE_ERR_CODE_INDEX + 4
-	ERR_PARAMS_RANGE_ERROR int = BASE_ERR_CODE_INDEX + 5
-	ERR_PARAMS_ERRORS      int = BASE_ERR_CODE_INDEX + 6
-
-	ERR_ALREADY_EXISTS int = BASE_ERR_CODE_INDEX + 7
-	ERR_NOT_FOUND      int = BASE_ERR_CODE_INDEX + 8
-	ERR_DATA_MISSING   int = BASE_ERR_CODE_INDEX + 9
+	ERR_XORM_ERROR         int = BASE_ERR_CODE_INDEX + 3
 )
 
 type HTTPHandler func(ctx context.Context, v interface{}) (int, interface{})
@@ -41,7 +31,7 @@ var (
 
 func InitNewAction() {
 	NewActionMap = make(map[string]func(c *gin.Context, ctx context.Context) (int, interface{}))
-	//NewActionMap["AddBinlogConsumer"] = AddBinlogConsumer
+	NewActionMap["LogIn"] = LogIn
 }
 
 func init() {

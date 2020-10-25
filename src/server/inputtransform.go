@@ -16,7 +16,7 @@ type InputTransformError struct {
 
 const (
 	ErrInputTransformCodeMissing = iota
-	ErrInputTransformCodeTypeMismatch
+	//ErrInputTransformCodeTypeMismatch
 )
 
 func newInputTransformError(code int, field, desc string) *InputTransformError {

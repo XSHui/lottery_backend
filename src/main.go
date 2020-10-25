@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"lottery_backend/src/config"
 	api "lottery_backend/src/server"
 	"lottery_backend/src/xlog"
@@ -48,6 +47,7 @@ func main() {
 
 	// TODO: init log
 	xlog.Init("/data/lottery.log", "debug", 168, 24)
+	xlog.DebugSimple("WelCome Lottery!", xlog.Fields{})
 
 	// init db
 	err := xorm.GetInstance().Init(
@@ -58,9 +58,12 @@ func main() {
 		cfg.DbInfo.DbName,
 		"info")
 	if err != nil {
-		fmt.Println("Init Db Error: %v", err)
+		xlog.ErrorSimple("Init DB Failed!", xlog.Fields{
+			"err": err,
+		})
 		os.Exit(1)
 	}
+	xlog.DebugSimple("Init DB Success!", xlog.Fields{})
 
 	// init server
 	api.StartHttpServer(cfg.ServerInfo.Ip, int(cfg.ServerInfo.ListenPort))

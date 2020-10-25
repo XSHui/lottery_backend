@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	//"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -70,7 +69,8 @@ func StartHttpServer(ip string, port int) {
 			APIResponseError(c, "", ERR_ACTION_INVALID, "miss action")
 			return
 		}
-		ActionRouter(c, ctx, reqAction.(string), v)
+		newCtx := NewContextWithSession(ctx, NewSessionId())
+		ActionRouter(c, newCtx, reqAction.(string), v)
 	})
 
 	// 启动 HTTP 服务
