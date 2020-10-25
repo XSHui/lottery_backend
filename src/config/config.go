@@ -13,7 +13,7 @@ type Config struct {
 type ServerInfo struct {
 	Ip         string `toml:"ip" json:"ip"`
 	ListenPort uint   `toml:"listen_port" json:"listen_port"`
-	ManagePort uint   `toml:"manage_port" json:"manage_port"`
+	ManagePort uint   `toml:"manage_port" json:"manage_port"`   // TODO
 }
 
 type DbInfo struct {
