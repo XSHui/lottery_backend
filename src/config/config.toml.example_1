@@ -1,0 +1,15 @@
+# Lottery Configuration.
+
+# server info
+[server_info]
+ip = "127.0.0.1"
+listen_port = 8888
+manage_port
+
+# db info
+[db_info]
+db_ip = "127.0.0.1"
+db_port = 6033
+db_user = "root"
+db_password = "root-root"
+db_name = "lottery"
