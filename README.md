@@ -7,4 +7,4 @@ A backend implementation of a simple lottery system.
 
 [build-doc](docs/build.md)
 
-
+[code-doc](docs/code.md)
