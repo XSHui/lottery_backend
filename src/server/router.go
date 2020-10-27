@@ -32,6 +32,7 @@ var (
 func InitNewAction() {
 	NewActionMap = make(map[string]func(c *gin.Context, ctx context.Context) (int, interface{}))
 	NewActionMap["LogIn"] = LogIn
+	// TODO: add other action
 }
 
 func init() {

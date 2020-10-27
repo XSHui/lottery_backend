@@ -2,11 +2,17 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/gomodule/redigo/redis"
+
 	"lottery_backend/src/config"
+	xredis "lottery_backend/src/redis"
 	api "lottery_backend/src/server"
 	"lottery_backend/src/xlog"
 	"lottery_backend/src/xorm"
-	"os"
 )
 
 var cfg *config.Config
@@ -48,6 +54,28 @@ func main() {
 	// TODO: init log
 	xlog.Init("/data/lottery.log", "debug", 168, 24)
 	xlog.DebugSimple("WelCome Lottery!", xlog.Fields{})
+
+	// init redis
+	rdb := xredis.GetRedisInstance()
+	rdb.RedisPool = &redis.Pool{
+		Dial: func() (conn redis.Conn, err error) {
+			conn, err = redis.Dial("tcp",
+				fmt.Sprintf("%s:%s", cfg.RedisInfo.RedisIp, cfg.RedisInfo.RedisPort),
+				//redis.DialUsername(cfg.RedisInfo.RedisUser),
+				redis.DialPassword(cfg.RedisInfo.RedisPassword),
+			)
+			if err != nil {
+				xlog.ErrorSimple("Init Redis Failed!", xlog.Fields{
+					"err": err,
+				})
+				panic(conn)
+			}
+			return
+		},
+		MaxIdle:     50,
+		MaxActive:   2000,
+		IdleTimeout: 180 * time.Second,
+	}
 
 	// init db
 	err := xorm.GetInstance().Init(

@@ -33,15 +33,15 @@
 * 代码建议提交到git.code.tencent.com或其他git仓库并提供可读权限
 
 
-## 二、整体框架
+## 二、整体框架 [TODO]
 
 
-## 三、前端（TODO）
+## 三、前端[TODO]
 
 
 ## 四、后端
 
-### 2.1 后端业务
+### 2.1 后端业务 [TODO]
 
 
 ### 2.2 DB设计(mysql)
@@ -67,42 +67,74 @@
 
 > table: user
 ```
-id: 电话号码
-name:
+  3 type User struct {
+  4     Id       string `json:"id" xorm:"not null pk default '' VARCHAR(128)"`
+  5     PhoneNumber uint64 `json:"phone_number" xorm:"not null unique default 0 INT(11)"`
+  6     // TODO: State
+  7     CreateTime  int    `json:"create_time" xorm:"INT(10)"`
+  8     ModifyTime  int    `json:"modify_time" xorm:"INT(10)"`
+  9     DeleteTime  int    `json:"delete_time" xorm:"INT(10)"`
+ 10 }
 ```
 
-> table: lottery
+> table: activity.go 
 ```
-user_id: 用户id
-activity_id: 活动id
-lottery_idx: 当前活动总抽奖次数
-prize_id: 奖品id
-daily_count: 当前活动当天抽奖次数
-last_time: 当前活动最后一次抽奖时间
+  3 // TODO: multi lottery
+  4 type Activity struct {
+  5     // Id
+  6     // Name
+  7     // StartTime
+  8     // EndTime
+  9 }
 ```
 
 > table: article
 ```
-user_id: 用户id，电话号码
-activity_id: 活动场次
-modify_time: 修改时间
-writings: 用户提交的短文(默认:多次提交，覆盖)
+  3 type Article struct {
+  4     Id     string `json:"id" xorm:"not null pk default '' VARCHAR(128)"`
+  5     UserId string `json:"user_id" xorm:"not null default '' VARCHAR(128)"`
+  6     // TODO: ActivityId
+  7     Text   string `json:"article" xorm:"not null default '' VARCHAR(1024)"`
+  8 }
+```
+
+> table: permmition
+```
+ 3 type Permission struct {
+  4     UserId       string `json:"user_id" xorm:"not null unique default '' VARCHAR(128)"`
+  5     // TODO: ActivityId
+  6     Permitted    int `json:"permitted" xorm:"default 0 TINYINT(1)"`
+  7 }
 ```
 
 > table: prize
 ```
-id: 奖品id
-activity_id: 活动场次id
-name: 奖品名称
-count: 奖品数量
-probability: 获奖概率
-remaining_count: 奖品剩余数量
+  3 type Prize struct {
+  4     Id string `json:"id" xorm:"not null pk default '' VARCHAR(128)"`
+  5     // TODO: ActivityId
+  6     Award     uint64  `json:"award" xorm:"INT(10)"`
+  7     Name      string  `json:"prize name" xorm:"VARCHAR(256)"`
+  8     Odds      float32 `json:"odds" xorm:"FLOAT"`
+  9     Total     int     `json:"total" xorm:"INT(10)"`
+ 10     Left      int     `json:"left" xorm:"INT(10)"`
+ 11     Unlimited int     `json:"unlimited" xorm:"default 0 TINYINT(1)"`
+ 12     // TODO: State
+ 13     CreateTime int `json:"create_time" xorm:"INT(10)"`
+ 14     ModifyTime int `json:"modify_time" xorm:"INT(10)"`
+ 15     DeleteTime int `json:"delete_time" xorm:"INT(10)"`
+ 16 }
 ```
 
-> table: activity
+> table: record
 ```
-id: 活动场次
-name: 活动名称
-start_time: 活动开始时间
-end_time: 活动结束时间
+  3 type Record struct {
+  4     Id     string `json:"id" xorm:"not null pk default '' VARCHAR(128)"`
+  5     UserId string `json:"user_id" xorm:"not null unique(permission) default '' VARCHAR(128)"`
+  6     // TODO: ActivityId
+  7     PrizeId string `json:"user_id" xorm:"not null unique(permission) default '' VARCHAR(128)"`
+  8     // TODO: State
+  9     CreateTime int `json:"create_time" xorm:"not null unique(permission) default 0 INT(10)"`
+ 10     ModifyTime int `json:"modify_time" xorm:"INT(10)"`
+ 11     DeleteTime  int    `json:"delete_time" xorm:"INT(10)"`
+ 12 }
 ```

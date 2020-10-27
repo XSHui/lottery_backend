@@ -1,75 +1,83 @@
 package dao
 
 import (
-	"time"
+	"sync"
 
 	"github.com/gomodule/redigo/redis"
+
+	"lottery_backend/src/xlog"
 )
 
-const (
-	SET_IF_NOT_EXIST     = "NX" // 不存在则设置
-	SET_WITH_EXPIRE_TIME = "PX" // 过期时间(毫秒)
-	SET_LOCK_SUCCESS     = "OK" // 成功
-	UN_LOCK_SUCCESS      = 1    // 删除锁成功
-	UN_LOCK_NON_EXISTENT = 0    // 删除锁时,锁不存在
-)
-
-// NewRedisPool
-func NewRedisPool() *redis.Pool {
-	return &redis.Pool{
-		Dial: func() (conn redis.Conn, e error) {
-			conn, e = redis.Dial("tcp", "117.50.133.16:6379")
-			if e != nil {
-				panic(conn)
-			}
-			return
-		},
-		MaxIdle:     50,
-		MaxActive:   2000,
-		IdleTimeout: 180 * time.Second,
-	}
+type RedisManager struct {
+	RedisPool *redis.Pool
 }
 
-/*
-   设锁和解锁保证是一个客户端请求
-*/
-func (d *Dao) SetLock(key, requestId string, ex int) bool {
-	conn := d.RdPool.Get()
+var once sync.Once
+var redisManager *RedisManager = nil
+
+func GetRedisInstance() *RedisManager {
+	once.Do(func() {
+		redisManager.RedisPool = new(redis.Pool)
+	})
+	return redisManager
+}
+
+const (
+	SET_IF_NOT_EXIST  = "NX" //SETNX key value
+	SET_EXPIRE_TIME   = "PX" // millisecond
+	PX_TIME_OUT       = 100  // 100 ms
+	LOCK_OK           = "OK" // get lock success
+	DELLOCK_OK        = 1    // unlock success
+	DELLOCK_NOT_EXIST = 0    // lock does not exits when unlock
+)
+
+func (rm *RedisManager) SetLock(key, requestId string) bool {
+	conn := rm.RedisPool.Get()
 	defer conn.Close()
 	msg, err := redis.String(
-		conn.Do("SET", key, requestId, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, ex),
+		conn.Do("SET", key, requestId, SET_IF_NOT_EXIST, SET_EXPIRE_TIME, PX_TIME_OUT),
 	)
 	if err != redis.ErrNil && err != nil {
-		d.Logger.Printf("d.SetLock key(%s) requestId(%s) ex(%d) err(%v)", key, requestId, ex, err)
+		xlog.ErrorSimple("SetLock ERROR", xlog.Fields{
+			"key":       key,
+			"requestId": requestId,
+			"err":       err,
+		})
 	}
-	if msg == SET_LOCK_SUCCESS {
+	if msg == LOCK_OK {
 		return true
 	}
 	return false
 }
 
-// 获得分布式锁值
-func (d *Dao) GetLock(conn redis.Conn, key string) string {
-	msg, err := redis.String(conn.Do("GET", key))
-	if err != redis.ErrNil && err != nil {
-		d.Logger.Printf("d.GetLock key(%s) err(%v)", key, err)
-	}
-	return msg
-}
-
-func (d *Dao) UnLock(key, requestId string) bool {
-	conn := d.RdPool.Get()
+func (rm *RedisManager) UnLock(key, requestId string) bool {
+	conn := rm.RedisPool.Get()
 	defer conn.Close()
-	if d.GetLock(conn, key) == requestId {
+	if rm.GetLock(conn, key) == requestId {
 		msg, err := redis.Int64(conn.Do("DEL", key))
 		if err != redis.ErrNil && err != nil {
-			d.Logger.Printf("d.UnLock key(%s) requestId(%s) err(%v)", key, requestId, err)
+			xlog.ErrorSimple("DELLOCK ERROR", xlog.Fields{
+				"key":       key,
+				"requestId": requestId,
+				"err":       err,
+			})
 		}
-		// 避免操作时间过长,自动过期时再删除返回结果为0
-		if msg == UN_LOCK_SUCCESS || msg == UN_LOCK_NON_EXISTENT {
+		// time out
+		if msg == DELLOCK_OK || msg == DELLOCK_NOT_EXIST {
 			return true
 		}
 		return false
 	}
 	return false
+}
+
+func (rm *RedisManager) GetLock(conn redis.Conn, key string) string {
+	msg, err := redis.String(conn.Do("GET", key))
+	if err != redis.ErrNil && err != nil {
+		xlog.ErrorSimple("GetLock ERROR", xlog.Fields{
+			"key": key,
+			"err": err,
+		})
+	}
+	return msg
 }
