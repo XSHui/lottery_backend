@@ -13,6 +13,7 @@
 ##RUN make
 #COPY . .
 #RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on GOPROXY=https://goproxy.io go build -o lottery ./src
+#RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on GOPROXY=https://goproxy.io go build -o test_lottery ./test
 
 # Executable image
 FROM alpine

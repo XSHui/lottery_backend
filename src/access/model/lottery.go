@@ -1,8 +1,8 @@
 package model
 
 type LotteryRequest struct {
-	Action      string `json:"Action" comment: "Lottery"`
-	UserId      string `json:"UserId" comment: "UserId"`
+	Action string `json:"Action" comment: "Lottery"`
+	//	UserId      string `json:"UserId" comment: "UserId"`
 	PhoneNumber uint64 `json:"PhoneNumber" comment: "user phone number"`
 }
 

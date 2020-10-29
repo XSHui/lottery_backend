@@ -9,7 +9,11 @@ import (
 	"net/http"
 	"time"
 
+	//"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	"lottery_backend/src/utils"
+	"lottery_backend/src/xlog"
 )
 
 const (
@@ -25,6 +29,11 @@ type Response struct {
 }
 
 func APIResponseError(c *gin.Context, action string, code int, message string) {
+	xlog.ErrorSimple("[http-response-error]", xlog.Fields{
+		"action":  action,
+		"code":    code,
+		"message": message,
+	})
 	c.AbortWithStatusJSON(http.StatusOK, &Response{
 		Action:  action,
 		RetCode: code,
@@ -34,7 +43,18 @@ func APIResponseError(c *gin.Context, action string, code int, message string) {
 
 func HttpMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//ctx, _ = common.NewContext(context.Background())
+		sessionId := ""
+		ctx, sessionId = utils.NewContext(context.Background())
+		xlog.Debug(sessionId, "[http-request]", xlog.Fields{
+			"uri":    c.Request.RequestURI,
+			"method": c.Request.Method,
+		})
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+		c.Header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Cache-Control, Content-Language, Content-Type")
+		c.Header("Access-Control-Allow-Credentials", "false")
+		c.Set("content-type", "application/json")
 		if c.Request.RequestURI != BASE_URI {
 			APIResponseError(c, "", ERR_HTTP_URI, "no support this uri "+c.Request.RequestURI)
 			return
@@ -53,8 +73,9 @@ func StartHttpServer(ip string, port int) {
 
 	router.Use(HttpMiddleWare())
 
+	xlog.DebugSimple("Starting Http Server....", xlog.Fields{})
+
 	router.POST(BASE_URI, func(c *gin.Context) {
-		// 此处为了兼容新的body解析方式而重新将Body赋值
 		reader, _ := ioutil.ReadAll(c.Request.Body)
 		c.Request.Body = ioutil.NopCloser(bytes.NewReader(reader))
 
@@ -64,13 +85,20 @@ func StartHttpServer(ip string, port int) {
 			APIResponseError(c, "", ERR_PARSE_PARAMS_ERROR, "request body json decode error "+err.Error())
 			return
 		}
+		xlog.DebugSimple("[http-request-post-body]", xlog.Fields{
+			"request": v,
+			"err":     err,
+		})
 		reqAction, ok := v["Action"]
 		if !ok {
+			xlog.ErrorSimple("No Action", xlog.Fields{})
 			APIResponseError(c, "", ERR_ACTION_INVALID, "miss action")
 			return
 		}
-		newCtx := NewContextWithSession(ctx, NewSessionId())
-		ActionRouter(c, newCtx, reqAction.(string), v)
+		xlog.DebugSimple("after [http-request-post-body]", xlog.Fields{
+			"reqAction": reqAction,
+		})
+		ActionRouter(c, ctx, reqAction.(string), v)
 	})
 
 	// 启动 HTTP 服务
@@ -80,5 +108,6 @@ func StartHttpServer(ip string, port int) {
 		ReadTimeout: 5 * time.Second,
 	}
 
+	xlog.DebugSimple("Http Server Started", xlog.Fields{})
 	srv.ListenAndServe()
 }

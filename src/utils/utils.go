@@ -1,4 +1,4 @@
-package api
+package utils
 
 import (
 	"math/rand"
@@ -26,7 +26,7 @@ func NewRedisLockId() string {
 
 // NewLotteryCode: new lottery code
 func NewLotteryCode() int {
-	seed := time.Now().UnixNano()        // seed
+	seed := time.Now().UnixNano() // seed
 	r := rand.New(rand.NewSource(seed))
 	return r.Intn(config.BASE_LOTTERY_CODE)
 }

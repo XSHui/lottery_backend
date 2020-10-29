@@ -6,7 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"lottery_backend/src/model"
+	"lottery_backend/src/access/model"
+	"lottery_backend/src/utils"
 	"lottery_backend/src/xlog"
 	"lottery_backend/src/xorm"
 	xmodel "lottery_backend/src/xorm/model"
@@ -14,7 +15,12 @@ import (
 
 // LogIn: new user login
 func LogIn(c *gin.Context, ctx context.Context) (int, interface{}) {
-	sessionId := GetSessionIdFromContext(ctx)
+	sessionId := utils.GetSessionIdFromContext(ctx)
+
+	xlog.DebugSimple(sessionId, xlog.Fields{
+		"LogIn": LogIn,
+	})
+
 	res := model.LogInResponse{
 		Action:  "LogInResponse",
 		RetCode: 0,
@@ -29,18 +35,21 @@ func LogIn(c *gin.Context, ctx context.Context) (int, interface{}) {
 		res.RetCode = ERR_PARSE_PARAMS_ERROR
 		return SUCCESS_ON_ACTION_RETCODE, res
 	}
-	if req.PhoneNumber == 0 {
+	if req.PhoneNumber == 0 { // TODO: check phone number
 		xlog.Error(sessionId, "LogIn param invalid", xlog.Fields{
 			"res": req,
 		})
 		res.Message = "LogIn param invalid"
 		res.RetCode = ERR_PARSE_PARAMS_ERROR
+		return SUCCESS_ON_ACTION_RETCODE, res
 	}
+	// TODO: phone number check
+	userId := utils.NewId()
 	err = xorm.InsertUser(&xmodel.User{
-		Id:          NewId(),
+		Id:          userId,
 		PhoneNumber: req.PhoneNumber,
-		CreateTime:  NowTimestamp(),
-		ModifyTime:  NowTimestamp(),
+		CreateTime:  utils.NowTimestamp(),
+		ModifyTime:  utils.NowTimestamp(),
 	})
 	if err != nil {
 		xlog.Error(sessionId, "insert user error", xlog.Fields{
@@ -49,13 +58,15 @@ func LogIn(c *gin.Context, ctx context.Context) (int, interface{}) {
 		})
 		res.Message = err.Error()
 		res.RetCode = ERR_XORM_ERROR
+		return SUCCESS_ON_ACTION_RETCODE, res
 	}
+	res.UserId = userId
 	return SUCCESS_ON_ACTION_RETCODE, res
 }
 
 // UserExist: check whether user exist, if not send verification code
 func UserExist(c *gin.Context, ctx context.Context) (int, interface{}) {
-	sessionId := GetSessionIdFromContext(ctx)
+	sessionId := utils.GetSessionIdFromContext(ctx)
 	res := model.UserExistResponse{
 		Action:  "UserExistResponse",
 		RetCode: 0,
@@ -76,6 +87,7 @@ func UserExist(c *gin.Context, ctx context.Context) (int, interface{}) {
 		})
 		res.Message = "UserExist param invalid"
 		res.RetCode = ERR_PARSE_PARAMS_ERROR
+		return SUCCESS_ON_ACTION_RETCODE, res
 	}
 	_, err = xorm.GetUserInfoByPhoneNum(req.PhoneNumber)
 	if err != nil {
@@ -85,6 +97,7 @@ func UserExist(c *gin.Context, ctx context.Context) (int, interface{}) {
 		})
 		res.Message = err.Error()
 		res.RetCode = ERR_XORM_ERROR
+		return SUCCESS_ON_ACTION_RETCODE, res
 	}
 	res.Exist = true
 	return SUCCESS_ON_ACTION_RETCODE, res

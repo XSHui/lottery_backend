@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .db{
+            display: block;
+            margin-bottom: 20px;
+        }
+        .vm{
+            vertical-align: middle;
+        }
+        #error{
+            color: red;
+        }
+        .center{
+            width: 400px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="center">
+    <div class="db">
+        <span>手机号:&nbsp;&nbsp;</span><input type="text" id="phone">
+    </div>
+    <div class="db">
+        <span class="vm">征文:&nbsp;&nbsp;</span><textarea class="vm" name="" id="text" cols="30" rows="10"></textarea>
+    </div>
+    <button class="db" id="btn">抽奖</button>
+    <div id="error"></div>
+    <button class="db" id="record">获奖记录</button>
+    <button class="db" id="article">获取文章</button>
+    <div id="content"></div>
+    <div id="articleContent"></div>
+</div>
+<script src="./axios.min.js"></script>
+<script>
+    const url = 'http://106.75.224.81:8888';
+    const phone = document.getElementById('phone');
+    const text = document.getElementById('text');
+    const btn = document.getElementById('btn');
+    const content = document.getElementById('content');
+    const record = document.getElementById('record');
+    const article = document.getElementById('article');
+    const articleContent = document.getElementById('articleContent');
+    const error = document.getElementById('error');
+
+    btn.onclick=()=>{
+        const PhoneNumber = parseInt(phone.value)
+        if(PhoneNumber && text.value) {
+            axios.post(url,{
+                PhoneNumber, "VerifyCode": 1, "Action": "LogIn"
+            }).then(function(response){
+                if(response.data.RetCode===0){
+                    return axios.post(url,{
+                        "UserId": response.data.UserId,
+                        "Text": text.value,
+                        "Action": "SubmitArticle"
+                    })
+                }
+                error.innerHTML = response.data.Message;
+                return false
+            }).then(function(response){
+                if(response.data.RetCode===0){
+                    return axios.post(url,{
+                        PhoneNumber,
+                        "Action": "Lottery"
+                    })
+                }
+                error.innerHTML = response.data.Message;
+            }).then(function(response){
+                if(response.data.RetCode===0){
+                    error.innerHTML = ''
+                    alert(response.data.PrizeName)
+                    return;
+                }
+                error.innerHTML = response.data.Message;
+            }).catch(function(err){
+                // error.innerHTML = err
+            });
+        }else {
+            alert('请填写完整参数')
+        }
+    }
+    article.onclick=()=>{
+        axios.post(url,{
+            "Offset": 0, "Limit": 100, "Action": "ListArticle"
+        })
+            .then(function(response){
+                let str = ''
+                response.data.DataSet.forEach((item, index)=>{
+                    str += `<tr>
+                    <th>${item.article}</th>
+                    <th>${item.id}</th>
+                    <th>${item.user_id}</th>
+                </tr>`
+                })
+                content.innerHTML = `<table border="1" CellSpacing="0">
+                <tr>
+                    <th>文章</th>
+                    <th>id</th>
+                    <th>用户id</th>
+                </tr>
+                ${str}
+            </table>`
+            })
+            .catch(function(err){
+                console.log(err);
+            });
+    }
+
+    record.onclick=()=>{
+        axios.post(url,{
+            "Offset": 0, "Limit": 100, "Action": "ListRecord"
+        })
+            .then(function(response){
+                let str = ''
+                response.data.DataSet.forEach((item, index)=>{
+                    str += `<tr>
+                    <th>${item.id}</th>
+                    <th>${item.user_id}</th>
+                    <th>${item.prize_id}</th>
+                </tr>`
+                })
+                content.innerHTML = `<table border="1" CellSpacing="0">
+                <tr>
+                    <th>id</th>
+                    <th>用户id</th>
+                    <th>奖品id</th>
+                </tr>
+                ${str}
+            </table>`
+            })
+            .catch(function(err){
+                console.log(err);
+            });
+    }
+</script>
+</body>
+</html>

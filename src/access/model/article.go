@@ -3,9 +3,9 @@ package model
 import xmodel "lottery_backend/src/xorm/model"
 
 type SubmitArticleRequest struct {
-	Action      string `json:"Action" comment: "SubmitArticle"`
-	UserId 		string `json:"UserId" comment: "user id"`
-	Text        string `json:"Text" comment: "article"`
+	Action string `json:"Action" comment: "SubmitArticle"`
+	UserId string `json:"UserId" comment: "user id"`
+	Text   string `json:"Text" comment: "article"`
 }
 
 type SubmitArticleResponse struct {
@@ -15,11 +15,12 @@ type SubmitArticleResponse struct {
 }
 
 type ListArticleRequest struct {
-	Action      string `json:"Action" comment: "ListArticle"`
-	Offset      int `json:"Offset" commend:"offset"`
-	Limit       int `json:"Limit" comment:"limit"`
+	Action string `json:"Action" comment: "ListArticle"`
+	Offset int    `json:"Offset" commend:"offset"`
+	Limit  int    `json:"Limit" comment:"limit"`
 }
 
+// TODO: return count(*)
 type ListArticleResponse struct {
 	Action  string `json:"Action" comment:"SubmitArticleResponse"`
 	RetCode int    `json:"RetCode" comment:"return code"`

@@ -8,9 +8,9 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 
+	"lottery_backend/src/access/api"
 	"lottery_backend/src/config"
 	xredis "lottery_backend/src/redis"
-	api "lottery_backend/src/server"
 	"lottery_backend/src/xlog"
 	"lottery_backend/src/xorm"
 )
@@ -33,7 +33,7 @@ func initConfig() {
 	flag.StringVar(&cfg.DbInfo.DbName, "db_name", "lottery", "db name")
 
 	// redis info
-	flag.StringVar(&cfg.RedisInfo.RedisIp, "redis_ip", "0.0.0.0", "redis ip")
+	flag.StringVar(&cfg.RedisInfo.RedisIp, "redis_ip", "10.23.101.22", "redis ip")
 	flag.UintVar(&cfg.RedisInfo.RedisPort, "redis_port", 6379, "redis port")
 	flag.StringVar(&cfg.RedisInfo.RedisUser, "redis_user", "root", "redis user")
 	flag.StringVar(&cfg.RedisInfo.RedisPassword, "redis_password", "root-root", "redis password")
@@ -60,7 +60,7 @@ func main() {
 	rdb.RedisPool = &redis.Pool{
 		Dial: func() (conn redis.Conn, err error) {
 			conn, err = redis.Dial("tcp",
-				fmt.Sprintf("%s:%s", cfg.RedisInfo.RedisIp, cfg.RedisInfo.RedisPort),
+				fmt.Sprintf("%s:%d", cfg.RedisInfo.RedisIp, cfg.RedisInfo.RedisPort),
 				//redis.DialUsername(cfg.RedisInfo.RedisUser),
 				redis.DialPassword(cfg.RedisInfo.RedisPassword),
 			)
@@ -76,6 +76,7 @@ func main() {
 		MaxActive:   2000,
 		IdleTimeout: 180 * time.Second,
 	}
+	xlog.DebugSimple("Init Redis Success!", xlog.Fields{})
 
 	// init db
 	err := xorm.GetInstance().Init(

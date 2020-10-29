@@ -17,6 +17,7 @@ var redisManager *RedisManager = nil
 
 func GetRedisInstance() *RedisManager {
 	once.Do(func() {
+		redisManager = new(RedisManager)
 		redisManager.RedisPool = new(redis.Pool)
 	})
 	return redisManager

@@ -7,7 +7,7 @@ import (
 
 // InsertUser: insert user to db
 func InsertUser(user *model.User) error {
-	if user == nil || user.PhoneNumber == 0 {
+	if user == nil || user.PhoneNumber == 0 || user.Id == ""{
 		return errors.New("insert user error")
 	}
 
